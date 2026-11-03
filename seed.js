@@ -1,0 +1,27 @@
+// Initial program list. Loaded into the database the first time the site runs.
+export const SEED = [
+  { name: "Ask Doctor", leaders: ["Jerry"] },
+  { name: "Skit (Teachers)", leaders: ["Sajitha", "Aji"] },
+  { name: "Skit (Students)", leaders: ["Abhisha"] },
+  { name: "Skit (Adults)", leaders: ["Brijitha"] },
+  { name: "Skit (Boys)", leaders: ["Asriel"] },
+  { name: "Mime", leaders: ["Bibin", "Aksan"] },
+  { name: "Action Song (Kids)", leaders: ["Annie"] },
+  { name: "Action Song (Teens)", leaders: ["Jincy"] },
+  { name: "Teachers Song", leaders: ["Anil"] },
+  { name: "Kitchen Music", leaders: ["Abisha"] },
+  { name: "News", leaders: ["Jancy"] },
+  { name: "Papathe Kanda..", leaders: ["Job"] },
+  { name: "Orchestra", leaders: ["Anil"] },
+  { name: "Music Fusion", leaders: ["Josh"] },
+  { name: "Ottam Thullal", leaders: ["Brijitha"] },
+  { name: "Fancy Dress (Topic: 12 Disciples)", leaders: ["Annie"] },
+  { name: "Games", leaders: ["Brijitha", "Jincy", "Abisha", "Geetha aunt", "Jerry", "Jessy"] },
+].map((p, i) => ({
+  id: "p" + String(i + 1).padStart(2, "0"),
+  order: i + 1,
+  needed: null,
+  participants: [],
+  notes: "",
+  ...p,
+}));

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CCM Anniversary Programs</title>
+  <meta name="description" content="Shared tracker for CCM Anniversary programs, leaders and participants.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <div>
+        <h1>CCM Anniversary Programs</h1>
+        <p class="sub">Add yourself or others to a program. Changes are shared with everyone.</p>
+      </div>
+      <label class="me">
+        <span>Your name</span>
+        <input id="myName" type="text" placeholder="So others know who edited" autocomplete="name">
+      </label>
+    </div>
+  </header>
+
+  <div id="banner" class="banner wrap" hidden></div>
+
+  <main class="wrap">
+    <section id="stats" class="stats" aria-live="polite"></section>
+
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search programs, leaders or people…" aria-label="Search">
+      <select id="filter" aria-label="Filter">
+        <option value="all">All programs</option>
+        <option value="need">Needs more people</option>
+        <option value="full">Filled</option>
+        <option value="unset">Count not set</option>
+        <option value="empty">No participants yet</option>
+      </select>
+      <div class="tabs" role="tablist">
+        <button type="button" data-view="programs" class="active" role="tab">Programs</button>
+        <button type="button" data-view="people" role="tab">By person</button>
+      </div>
+      <button type="button" id="exportBtn" class="ghost">Download Excel</button>
+      <button type="button" id="addBtn" class="primary">+ Add program</button>
+    </div>
+
+    <section id="list" class="grid"><p class="empty">Loading programs…</p></section>
+    <section id="people" class="people" hidden></section>
+  </main>
+
+  <footer class="wrap foot">CCM Anniversary · Program tracker</footer>
+
+  <dialog id="editDlg">
+    <form id="editForm" method="dialog">
+      <h2 id="dlgTitle">Edit program</h2>
+      <label>Program name
+        <input name="name" required maxlength="150">
+      </label>
+      <label>Leader(s) <small>separate with commas</small>
+        <input name="leaders" maxlength="300">
+      </label>
+      <label>Total participants needed <small>leave blank if not decided</small>
+        <input name="needed" type="number" min="0" max="500" inputmode="numeric">
+      </label>
+      <label>Notes <small>practice time, costumes, songs…</small>
+        <textarea name="notes" rows="3" maxlength="2000"></textarea>
+      </label>
+      <div class="dlg-actions">
+        <button type="button" id="deleteBtn" class="danger">Delete program</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancelBtn" class="ghost">Cancel</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

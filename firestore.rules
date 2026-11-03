@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Anyone with the link can view and edit programs.
+    match /programs/{id} {
+      allow read: if true;
+      allow delete: if true;
+      allow create, update: if request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 150
+        && request.resource.data.participants is list
+        && request.resource.data.participants.size() <= 300
+        && request.resource.data.leaders is list
+        && request.resource.data.leaders.size() <= 30;
+    }
+    // Marker so the starting program list is loaded only once.
+    match /meta/seed {
+      allow read, create: if true;
+    }
+  }
+}
