@@ -1,14 +1,10 @@
-// Paste your Firebase web app config here (see README.md, step 1).
-// While this is null the site runs in "local mode": edits are saved only in
-// the current browser and are NOT shared with other people.
-//
-// Example:
-// export const firebaseConfig = {
-//   apiKey: "AIza...",
-//   authDomain: "ccm-programs.firebaseapp.com",
-//   projectId: "ccm-programs",
-//   storageBucket: "ccm-programs.appspot.com",
-//   messagingSenderId: "1234567890",
-//   appId: "1:1234567890:web:abcdef",
-// };
-export const firebaseConfig = null;
+// Firebase web app settings for the shared database.
+// These are not secret; Firestore rules (firestore.rules) control access.
+export const firebaseConfig = {
+  apiKey: "AIzaSyD6cGxYMW5JUMwXE64gnQcBd6c7MQsziPo",
+  authDomain: "ccm-programs.firebaseapp.com",
+  projectId: "ccm-programs",
+  storageBucket: "ccm-programs.firebasestorage.app",
+  messagingSenderId: "1085482001360",
+  appId: "1:1085482001360:web:a1181d94f7917186440fd5",
+};
