@@ -19,8 +19,11 @@ myName.addEventListener("input", () => { try { localStorage.setItem("ccm-my-name
 const stamp = () => ({ updatedAt: Date.now(), updatedBy: norm(myName.value) });
 
 // ---------- helpers ----------
+const isSingle = (p) => p.type === "single";
+const typeLabel = (p) => (isSingle(p) ? "Single" : "Group");
 function status(p) {
   const n = (p.participants || []).length;
+  if (isSingle(p)) return n >= 1 ? "full" : "need";
   if (p.needed == null || p.needed === "") return "unset";
   return n >= p.needed ? "full" : "need";
 }
@@ -89,6 +92,7 @@ function renderStats() {
   const empty = programs.filter((p) => !(p.participants || []).length).length;
   $("#stats").innerHTML = [
     [programs.length, "Programs"],
+    [programs.filter(isSingle).length, "Single programs"],
     [total, "Participant slots filled"],
     [people, "Different people"],
     [need, "Need more people"],
@@ -105,10 +109,12 @@ function matches(p, q) {
 function renderPrograms() {
   const q = $("#search").value.trim().toLowerCase();
   const f = $("#filter").value;
+  const tf = $("#typeFilter").value;
   const counts = personCounts();
   const list = programs
     .map((p, i) => ({ p, num: i + 1 }))
     .filter(({ p }) => matches(p, q))
+    .filter(({ p }) => tf === "all" || (tf === "single") === isSingle(p))
     .filter(({ p }) => f === "all" || (f === "empty" ? !(p.participants || []).length : status(p) === f));
 
   const el = $("#list");
@@ -120,31 +126,36 @@ function renderPrograms() {
     const pill = st === "unset" ? `${parts.length} joined` : `${parts.length} / ${p.needed}`;
     const left = st === "need" ? ` · ${p.needed - parts.length} more needed` : st === "full" ? " · filled" : " · target not set";
     const leaders = (p.leaders || []).join(", ");
+    const single = isSingle(p);
+    const leaderLine = leaders
+      ? `${single ? "Coordinator" : "Leader"}${(p.leaders || []).length > 1 ? "s" : ""}: ${esc(leaders)}`
+      : single ? "" : "No leader yet";
+    const showAdd = !single || parts.length === 0;
     return `
     <article class="card" data-id="${esc(p.id)}">
       <div class="card-head">
         <span class="num">${num}</span>
         <div class="titles">
-          <h2>${esc(p.name)}</h2>
-          <p class="leaders">${leaders ? `Leader${(p.leaders || []).length > 1 ? "s" : ""}: ${esc(leaders)}` : "No leader yet"}</p>
+          <h2>${esc(p.name)} <span class="type ${single ? "single" : "group"}">${typeLabel(p)}</span></h2>
+          ${leaderLine ? `<p class="leaders">${leaderLine}</p>` : ""}
         </div>
         <button type="button" class="edit" data-act="edit">Edit</button>
       </div>
-      <div class="progress ${st}">
+      ${single ? "" : `<div class="progress ${st}">
         <div class="bar"><span style="width:${pct}%"></span></div>
         <span class="pill">${pill}</span>
       </div>
-      <p class="meta">${esc(left.slice(3))}</p>
+      <p class="meta">${esc(left.slice(3))}</p>`}
       ${parts.length
-        ? `<ul class="chips">${parts.map((n) => {
+        ? `${single ? `<p class="meta">Performer</p>` : ""}<ul class="chips">${parts.map((n) => {
             const c = counts.get(key(n)) || 0;
             return `<li class="${c > 2 ? "dup" : ""}" title="${c > 1 ? `In ${c} programs` : ""}"><span>${esc(n)}</span><button type="button" data-act="rm" data-name="${esc(n)}" aria-label="Remove ${esc(n)}">×</button></li>`;
           }).join("")}</ul>`
-        : `<p class="none">No participants added yet.</p>`}
-      <form class="add-p" data-act="add">
-        <input data-pid="${esc(p.id)}" placeholder="Add name(s), comma separated" aria-label="Add participant to ${esc(p.name)}" maxlength="300">
+        : `<p class="none">${single ? "No performer added yet." : "No participants added yet."}</p>`}
+      ${showAdd ? `<form class="add-p" data-act="add">
+        <input data-pid="${esc(p.id)}" placeholder="${single ? "Add performer name" : "Add name(s), comma separated"}" aria-label="Add ${single ? "performer" : "participant"} to ${esc(p.name)}" maxlength="300">
         <button type="submit">Add</button>
-      </form>
+      </form>` : ""}
       ${p.notes ? `<p class="notes">${esc(p.notes)}</p>` : ""}
       ${p.updatedAt ? `<p class="meta">Updated ${timeAgo(p.updatedAt)}${p.updatedBy ? " by " + esc(p.updatedBy) : ""}</p>` : ""}
     </article>`;
@@ -190,6 +201,10 @@ $("#list").addEventListener("submit", (e) => {
   for (const n of splitNames(input.value)) if (!existing.has(key(n))) { existing.add(key(n)); names.push(n); }
   input.value = "";
   if (!names.length) { toast("Already in this program"); return; }
+  if (isSingle(p)) {
+    if ((p.participants || []).length) { toast("A single program has one performer. Remove the current one first."); return; }
+    names.splice(1);
+  }
   store.addParticipants(id, names, stamp()).then(() => toast(`Added ${names.join(", ")}`)).catch(fail);
 });
 
@@ -208,12 +223,14 @@ $("#list").addEventListener("click", (e) => {
 
 $("#search").addEventListener("input", render);
 $("#filter").addEventListener("change", render);
+$("#typeFilter").addEventListener("change", render);
 document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => {
   view = b.dataset.view;
   document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x === b));
   $("#list").hidden = view !== "programs";
   $("#people").hidden = view !== "people";
   $("#filter").hidden = view !== "programs";
+  $("#typeFilter").hidden = view !== "programs";
   render();
 }));
 
@@ -223,9 +240,11 @@ const form = $("#editForm");
 const F = form.elements;
 function openEdit(id) {
   editingId = id;
-  const p = id ? programs.find((x) => x.id === id) : { name: "", leaders: [], needed: null, notes: "" };
+  const p = id ? programs.find((x) => x.id === id) : { name: "", type: "group", leaders: [], needed: null, notes: "" };
   $("#dlgTitle").textContent = id ? "Edit program" : "Add program";
   F.name.value = p.name || "";
+  F.type.value = isSingle(p) ? "single" : "group";
+  syncTypeFields();
   F.leaders.value = (p.leaders || []).join(", ");
   F.needed.value = p.needed ?? "";
   F.notes.value = p.notes || "";
@@ -233,19 +252,32 @@ function openEdit(id) {
   dlg.showModal();
   F.name.focus();
 }
+function syncTypeFields() {
+  const single = F.type.value === "single";
+  $("#neededField").hidden = single;
+  $("#leadersLabel").textContent = single ? "Coordinator(s) (optional)" : "Leader(s)";
+}
+F.type.addEventListener("change", syncTypeFields);
 $("#addBtn").addEventListener("click", () => openEdit(null));
 $("#cancelBtn").addEventListener("click", () => dlg.close());
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const neededRaw = F.needed.value.trim();
+  const single = F.type.value === "single";
   const fields = {
     name: norm(F.name.value),
+    type: single ? "single" : "group",
     leaders: splitNames(F.leaders.value),
-    needed: neededRaw === "" ? null : Math.max(0, parseInt(neededRaw, 10) || 0),
+    needed: single ? 1 : neededRaw === "" ? null : Math.max(0, parseInt(neededRaw, 10) || 0),
     notes: F.notes.value.trim(),
     ...stamp(),
   };
   if (!fields.name) return;
+  const cur = editingId && programs.find((x) => x.id === editingId);
+  if (single && cur && (cur.participants || []).length > 1) {
+    alert("This program has more than one participant. Remove extra names before making it a single program.");
+    return;
+  }
   const isEdit = !!editingId;
   const op = editingId
     ? store.update(editingId, fields)
@@ -277,6 +309,7 @@ $("#exportBtn").addEventListener("click", async () => {
       return {
         "#": i + 1,
         Program: p.name,
+        Type: typeLabel(p),
         "Leader(s)": (p.leaders || []).join(", "),
         "Total needed": p.needed ?? "",
         Joined: n,
@@ -291,7 +324,7 @@ $("#exportBtn").addEventListener("click", async () => {
     // Sheet 2: one row per participant (easy to filter / sort in Excel)
     const rows = [];
     programs.forEach((p, i) => (p.participants || []).forEach((name) =>
-      rows.push({ "#": i + 1, Program: p.name, Participant: name, "Leader(s)": (p.leaders || []).join(", ") })));
+      rows.push({ "#": i + 1, Program: p.name, Type: typeLabel(p), Participant: name, "Leader(s)": (p.leaders || []).join(", ") })));
 
     // Sheet 3: one row per person with all their programs
     const m = new Map();
@@ -314,8 +347,8 @@ $("#exportBtn").addEventListener("click", async () => {
       ws["!cols"] = widths.map((wch) => ({ wch }));
       XLSX.utils.book_append_sheet(wb, ws, name);
     };
-    add(summary, "Programs", [4, 32, 30, 12, 8, 12, 60, 40, 20, 16]);
-    add(rows, "Participants", [4, 32, 28, 30], ["#", "Program", "Participant", "Leader(s)"]);
+    add(summary, "Programs", [4, 32, 8, 30, 12, 8, 12, 60, 40, 20, 16]);
+    add(rows, "Participants", [4, 32, 8, 28, 30], ["#", "Program", "Type", "Participant", "Leader(s)"]);
     add(people, "By person", [24, 15, 13, 60, 40], ["Name", "Programs joined", "Programs led", "Participating in", "Leading"]);
     const date = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `CCM-Anniversary-Programs-${date}.xlsx`);

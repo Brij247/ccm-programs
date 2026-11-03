@@ -29,6 +29,11 @@
 
     <div class="toolbar">
       <input id="search" type="search" placeholder="Search programs, leaders or people…" aria-label="Search">
+      <select id="typeFilter" aria-label="Program type">
+        <option value="all">Group and single</option>
+        <option value="group">Group programs</option>
+        <option value="single">Single programs</option>
+      </select>
       <select id="filter" aria-label="Filter">
         <option value="all">All programs</option>
         <option value="need">Needs more people</option>
@@ -56,10 +61,16 @@
       <label>Program name
         <input name="name" required maxlength="150">
       </label>
-      <label>Leader(s) <small>separate with commas</small>
+      <label>Program type
+        <select name="type">
+          <option value="group">Group: several participants</option>
+          <option value="single">Single: one performer</option>
+        </select>
+      </label>
+      <label><span id="leadersLabel">Leader(s)</span> <small>separate with commas</small>
         <input name="leaders" maxlength="300">
       </label>
-      <label>Total participants needed <small>leave blank if not decided</small>
+      <label id="neededField">Total participants needed <small>leave blank if not decided</small>
         <input name="needed" type="number" min="0" max="500" inputmode="numeric">
       </label>
       <label>Notes <small>practice time, costumes, songs…</small>

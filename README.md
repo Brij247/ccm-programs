@@ -4,6 +4,8 @@ A shared web page where leaders and members can add participants to each program
 set how many people a program needs, and download everything as an Excel file.
 
 - **Programs view:** one card per program with leaders, a progress bar and participant names.
+- **Group and single programs:** a group program has many participants; a single program has one performer.
+  Choose the type when adding a program, or change it with **Edit**. Filter by type at the top.
 - **By person view:** every person and the programs they lead or take part in.
 - **Download Excel:** an `.xlsx` file with three sheets: Programs, Participants and By person.
 - **Your name box:** shows who made the last change on each program.
